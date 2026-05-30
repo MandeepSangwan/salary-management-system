@@ -26,9 +26,9 @@ async function fetchOrBuildInitialData(year, month, savedMonths) {
     const prev = savedMonths[0];
     const d = prev.data || {};
     return {
-      cash:   (d.cash   || []).map(r => newRow({ name: r.name, designation: r.designation })),
-      cheque: (d.cheque || []).map(r => newRow({ name: r.name, designation: r.designation })),
-      esi:    (d.esi    || []).map(r => newRow({ name: r.name, designation: r.designation })),
+      cash:   (d.cash   || []).map(r => newRow({ name: r.name, designation: r.designation, baseSalary: r.baseSalary, bankAccount: r.bankAccount, phoneNumber: r.phoneNumber })),
+      cheque: (d.cheque || []).map(r => newRow({ name: r.name, designation: r.designation, baseSalary: r.baseSalary, bankAccount: r.bankAccount, phoneNumber: r.phoneNumber })),
+      esi:    (d.esi    || []).map(r => newRow({ name: r.name, designation: r.designation, baseSalary: r.baseSalary, bankAccount: r.bankAccount, phoneNumber: r.phoneNumber })),
     };
   }
 
