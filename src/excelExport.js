@@ -154,8 +154,8 @@ export function exportToExcel(allRows, year, month) {
     });
 
     // Words row style
-    const wordsRow = rows.length + 6;
-    const wordsRef = `B${wordsRow}`;
+    const wordsRowIndex = rows.length + 6;
+    const wordsRef = `B${wordsRowIndex}`;
     if (ws[wordsRef]) {
       ws[wordsRef].s = {
         font: { italic: true, bold: true, sz: 10, color: { rgb: '78350F' } },
@@ -165,7 +165,7 @@ export function exportToExcel(allRows, year, month) {
     }
     // Style the merged empty cells in words row too
     headerCols.slice(2).forEach(col => {
-      const ref = `${col}${wordsRow}`;
+      const ref = `${col}${wordsRowIndex}`;
       if (ws[ref]) {
         ws[ref].s = { fill: { fgColor: { rgb: 'FFFBEB' } } };
       }
