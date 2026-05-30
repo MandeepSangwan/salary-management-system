@@ -78,38 +78,76 @@ function LoginScreen({ onLogin }) {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-      <div style={{ width: 400, background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ color: 'var(--primary)', marginBottom: 16 }}><Icons.Wallet /></div>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-main)', marginBottom: 8 }}>SalaryPro Login</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Sign in to your workspace</p>
+    <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--bg) 0%, #e0f2fe 100%)' }}>
+      <div style={{ 
+        width: 420, 
+        background: 'rgba(255, 255, 255, 0.85)', 
+        backdropFilter: 'blur(12px)',
+        padding: '40px', 
+        borderRadius: '24px', 
+        boxShadow: '0 20px 40px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)',
+        border: '1px solid rgba(255,255,255,0.6)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            width: 64, 
+            height: 64, 
+            borderRadius: '16px', 
+            background: 'linear-gradient(135deg, var(--primary) 0%, #0ea5e9 100%)', 
+            color: 'white', 
+            marginBottom: 20,
+            boxShadow: '0 8px 16px rgba(14, 165, 233, 0.25)'
+          }}>
+            <Icons.Wallet />
+          </div>
+          <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-main)', marginBottom: 8, letterSpacing: '-0.5px' }}>SalaryPro</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>Welcome back! Please sign in.</p>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Username</label>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text-main)', marginBottom: 8 }}>Username</label>
             <input 
               className="table-input input-wide" 
               value={username} 
               onChange={e => setUsername(e.target.value)} 
               required 
-              style={{ padding: '10px' }}
+              placeholder="Enter your username"
+              style={{ padding: '12px 16px', fontSize: 15, borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', transition: 'all 0.2s' }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Password</label>
+            <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text-main)', marginBottom: 8 }}>Password</label>
             <input 
               type="password" 
               className="table-input input-wide" 
               value={password} 
               onChange={e => setPassword(e.target.value)} 
               required 
-              style={{ padding: '10px' }}
+              placeholder="Enter your password"
+              style={{ padding: '12px 16px', fontSize: 15, borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', transition: 'all 0.2s' }}
             />
           </div>
-          {error && <div style={{ color: 'var(--danger)', fontSize: 13, background: '#fef2f2', padding: '8px', borderRadius: 6 }}>{error}</div>}
-          <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: '12px', marginTop: 8 }}>
-            {loading ? 'Logging in...' : 'Log In'}
+          {error && <div style={{ color: 'var(--danger)', fontSize: 14, background: '#fef2f2', padding: '12px', borderRadius: '8px', borderLeft: '4px solid var(--danger)' }}>{error}</div>}
+          <button 
+            className="btn btn-primary" 
+            type="submit" 
+            disabled={loading} 
+            style={{ 
+              justifyContent: 'center', 
+              padding: '14px', 
+              marginTop: 12, 
+              fontSize: 16, 
+              fontWeight: 600, 
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)'
+            }}
+          >
+            {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
       </div>
