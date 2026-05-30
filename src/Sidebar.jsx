@@ -34,8 +34,7 @@ export function Sidebar({ savedMonths, activeYear, activeMonth, onSelect, onDele
           ) : (
             savedMonths.map(({ year, month, data }) => {
               const isActive = year === activeYear && month === activeMonth;
-              const rows = Array.isArray(data?.rows) ? data.rows : [];
-              const summary = computeSummary(rows);
+              const summary = computeSummary(data || {});
               return (
                 <div
                   key={`${year}-${month}`}
