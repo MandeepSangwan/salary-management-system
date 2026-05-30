@@ -130,9 +130,9 @@ function LoginScreen({ onLogin }) {
               fontSize: 16, 
               fontWeight: 600, 
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)',
+              background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--teal) 100%)',
               border: 'none',
-              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)'
+              boxShadow: '0 4px 12px rgba(13, 140, 140, 0.3)'
             }}
           >
             {loading ? 'Authenticating...' : 'Sign In'}
