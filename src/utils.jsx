@@ -122,6 +122,8 @@ export function newRow(overrides = {}) {
     name: '',
     designation: '',
     baseSalary: '',
+    bankAccount: '',
+    phoneNumber: '',
     bonus: '',
     deductions: '',
     remarks: '',

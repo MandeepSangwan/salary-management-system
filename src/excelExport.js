@@ -16,55 +16,84 @@ export function exportToExcel(allRows, year, month) {
   const wb      = XLSX.utils.book_new();
 
   // ── Helper: build a category sheet ───────────────────────────────────────────
-  function buildCategorySheet(rows, catLabel) {
+  function buildCategorySheet(rows, catLabel, catKey) {
     const catSummary = computeRowsSummary(rows);
     const data = [];
+    const isBank = catKey === 'cheque' || catKey === 'esi';
+    const totalCols = isBank ? 10 : 8;
 
     // Title
-    data.push([`${label} — ${catLabel} Salary`, '', '', '', '', '', '', '']);
+    const titleRow = [`${label} — ${catLabel} Salary`];
+    for (let i = 1; i < totalCols; i++) titleRow.push('');
+    data.push(titleRow);
     data.push(['']);
 
     // Header
-    data.push(['#', 'Employee Name', 'Designation', 'Base Salary (₹)',
-      'Bonus / Allowance (₹)', 'Deductions (₹)', 'Net Salary (₹)', 'Remarks']);
+    const headerRow = ['#', 'Employee Name', 'Designation', 'Base Salary (₹)'];
+    if (isBank) {
+      headerRow.push('Bank A/C No', 'Phone No');
+    }
+    headerRow.push('Bonus / Allowance (₹)', 'Deductions (₹)', 'Net Salary (₹)', 'Remarks');
+    data.push(headerRow);
 
     // Data rows
     rows.forEach((row, idx) => {
-      data.push([
+      const rowData = [
         idx + 1,
         row.name || '',
         row.designation || '',
         toFloat(row.baseSalary),
+      ];
+      if (isBank) {
+        rowData.push(row.bankAccount || '', row.phoneNumber || '');
+      }
+      rowData.push(
         toFloat(row.bonus),
         toFloat(row.deductions),
         computeNetSalary(row),
-        row.remarks || '',
-      ]);
+        row.remarks || ''
+      );
+      data.push(rowData);
     });
 
     data.push(['']);
 
     // Totals
-    data.push(['', 'TOTAL', `${catSummary.employees} Employees`,
-      catSummary.totalBase, catSummary.totalBonus,
-      catSummary.totalDeductions, catSummary.totalNet, '']);
+    const totalsRow = ['', 'TOTAL', `${catSummary.employees} Employees`, catSummary.totalBase];
+    if (isBank) {
+      totalsRow.push('', '');
+    }
+    totalsRow.push(catSummary.totalBonus, catSummary.totalDeductions, catSummary.totalNet, '');
+    data.push(totalsRow);
 
     // Amount in words
-    data.push(['', `Net Salary in Words: ${amountInWords(catSummary.totalNet)}`, '', '', '', '', '', '']);
+    const wordsRow = ['', `Net Salary in Words: ${amountInWords(catSummary.totalNet)}`];
+    for (let i = 2; i < totalCols; i++) wordsRow.push('');
+    data.push(wordsRow);
 
     const ws = XLSX.utils.aoa_to_sheet(data);
 
-    ws['!cols'] = [
-      { wch: 4 }, { wch: 26 }, { wch: 22 },
-      { wch: 18 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 24 },
+    const cols = [
+      { wch: 4 }, { wch: 26 }, { wch: 22 }, { wch: 18 }
     ];
+    if (isBank) {
+      cols.push({ wch: 20 }, { wch: 18 });
+    }
+    cols.push({ wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 24 });
+    ws['!cols'] = cols;
+
     ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },                        // Title merge
-      { s: { r: rows.length + 5, c: 1 }, e: { r: rows.length + 5, c: 7 } }, // Words merge
+      { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },                        // Title merge
+      { s: { r: rows.length + 5, c: 1 }, e: { r: rows.length + 5, c: totalCols - 1 } }, // Words merge
     ];
 
-    const numericCi = new Set([3, 4, 5, 6]);
-    const headerCols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    // Identify which columns have numbers that need alignment
+    const numericCi = new Set(isBank ? [3, 6, 7, 8] : [3, 4, 5, 6]);
+    // Array of column letters for A to J
+    const headerCols = isBank 
+      ? ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'] 
+      : ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const netIndex = isBank ? 8 : 6;
 
     // Title cell
     if (ws['A1']) {
@@ -98,7 +127,7 @@ export function exportToExcel(allRows, year, month) {
         const ref = `${col}${excelRow}`;
         if (ws[ref]) {
           const isNum = numericCi.has(ci);
-          const isNet = ci === 6;
+          const isNet = ci === netIndex;
           ws[ref].s = {
             font: { sz: 10, color: { rgb: isNet ? '0D6E6E' : '1E293B' }, bold: isNet },
             fill: { fgColor: { rgb: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF' } },
@@ -116,7 +145,7 @@ export function exportToExcel(allRows, year, month) {
       if (ws[ref]) {
         const isNum = numericCi.has(ci);
         ws[ref].s = {
-          font: { bold: true, sz: 11, color: { rgb: ci === 6 ? '0D6E6E' : '0F2D55' } },
+          font: { bold: true, sz: 11, color: { rgb: ci === netIndex ? '0D6E6E' : '0F2D55' } },
           fill: { fgColor: { rgb: 'E0F5F5' } },
           alignment: { horizontal: isNum ? 'right' : 'left', vertical: 'center' },
         };
@@ -135,7 +164,7 @@ export function exportToExcel(allRows, year, month) {
       };
     }
     // Style the merged empty cells in words row too
-    ['C','D','E','F','G','H'].forEach(col => {
+    headerCols.slice(2).forEach(col => {
       const ref = `${col}${wordsRow}`;
       if (ws[ref]) {
         ws[ref].s = { fill: { fgColor: { rgb: 'FFFBEB' } } };
@@ -148,7 +177,7 @@ export function exportToExcel(allRows, year, month) {
   // ── Build category sheets ─────────────────────────────────────────────────────
   SALARY_CATEGORIES.forEach(cat => {
     const rows = allRows[cat.key] || [];
-    const ws   = buildCategorySheet(rows, cat.label);
+    const ws   = buildCategorySheet(rows, cat.label, cat.key);
     XLSX.utils.book_append_sheet(wb, ws, cat.label);
   });
 

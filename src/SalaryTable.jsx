@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { computeNetSalary, formatINR, computeRowsSummary, amountInWords, SALARY_CATEGORIES } from './utils';
 import { Icons } from './icons';
 
@@ -6,10 +7,29 @@ const DEFAULT_CAT = SALARY_CATEGORIES[0]; // Cash — safe fallback
 export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, category }) {
   const summary = computeRowsSummary(rows);
   const cat = category || DEFAULT_CAT; // guard against undefined during HMR
+  
+  const isBankTab = cat.key === 'cheque' || cat.key === 'esi';
+  const [showExtras, setShowExtras] = useState(false);
+  const showBonusDeductions = !isBankTab || showExtras;
 
   function updateCell(id, field, value) {
     onChange(rows.map(r => r.id === id ? { ...r, [field]: value } : r));
   }
+
+  const columns = [
+    true, // #
+    true, // Name
+    true, // Designation
+    true, // Base
+    isBankTab, // Bank Account
+    isBankTab, // Phone Number
+    showBonusDeductions, // Bonus
+    showBonusDeductions, // Deductions
+    true, // Net
+    true, // Remarks
+    !readOnly // Actions
+  ];
+  const totalCols = columns.filter(Boolean).length;
 
   return (
     <div className="table-wrapper">
@@ -19,8 +39,10 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
           <col style={{ width: 170 }} />
           <col style={{ width: 145 }} />
           <col style={{ width: 130 }} />
-          <col style={{ width: 125 }} />
-          <col style={{ width: 125 }} />
+          {isBankTab && <col style={{ width: 160 }} />}
+          {isBankTab && <col style={{ width: 130 }} />}
+          {showBonusDeductions && <col style={{ width: 125 }} />}
+          {showBonusDeductions && <col style={{ width: 125 }} />}
           <col style={{ width: 135 }} />
           <col style={{ width: 155 }} />
           {!readOnly && <col style={{ width: 52 }} />}
@@ -32,8 +54,10 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
             <th scope="col">Employee Name</th>
             <th scope="col">Designation</th>
             <th scope="col" className="th-number">Base Salary</th>
-            <th scope="col" className="th-number">Bonus / Allowance</th>
-            <th scope="col" className="th-number">Deductions</th>
+            {isBankTab && <th scope="col">Bank A/C No</th>}
+            {isBankTab && <th scope="col">Phone No</th>}
+            {showBonusDeductions && <th scope="col" className="th-number">Bonus / Allowance</th>}
+            {showBonusDeductions && <th scope="col" className="th-number">Deductions</th>}
             <th scope="col" className="th-number">Net Salary</th>
             <th scope="col">Remarks</th>
             {!readOnly && <th scope="col"></th>}
@@ -43,7 +67,7 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={readOnly ? 8 : 9}>
+              <td colSpan={totalCols}>
                 <div className="table-empty">
                   <div className="table-empty-icon">{cat.icon}</div>
                   <div className="table-empty-title">No {cat.label} employees added</div>
@@ -99,35 +123,67 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
                     )}
                   </td>
 
-                  <td style={{ textAlign: 'right' }}>
-                    {readOnly ? (
-                      <span>{row.bonus ? formatINR(row.bonus) : '—'}</span>
-                    ) : (
-                      <input
-                        className="table-input input-number"
-                        type="number" min="0"
-                        value={row.bonus}
-                        onChange={e => updateCell(row.id, 'bonus', e.target.value)}
-                        placeholder="0"
-                        aria-label={`Bonus row ${idx + 1}`}
-                      />
-                    )}
-                  </td>
+                  {isBankTab && (
+                    <td>
+                      {readOnly ? <span>{row.bankAccount || '—'}</span> : (
+                        <input
+                          className="table-input input-wide"
+                          value={row.bankAccount || ''}
+                          onChange={e => updateCell(row.id, 'bankAccount', e.target.value)}
+                          placeholder="Bank A/C No"
+                          aria-label={`Bank Account row ${idx + 1}`}
+                        />
+                      )}
+                    </td>
+                  )}
 
-                  <td style={{ textAlign: 'right' }}>
-                    {readOnly ? (
-                      <span>{row.deductions ? formatINR(row.deductions) : '—'}</span>
-                    ) : (
-                      <input
-                        className="table-input input-number"
-                        type="number" min="0"
-                        value={row.deductions}
-                        onChange={e => updateCell(row.id, 'deductions', e.target.value)}
-                        placeholder="0"
-                        aria-label={`Deductions row ${idx + 1}`}
-                      />
-                    )}
-                  </td>
+                  {isBankTab && (
+                    <td>
+                      {readOnly ? <span>{row.phoneNumber || '—'}</span> : (
+                        <input
+                          className="table-input input-wide"
+                          value={row.phoneNumber || ''}
+                          onChange={e => updateCell(row.id, 'phoneNumber', e.target.value)}
+                          placeholder="Phone No"
+                          aria-label={`Phone Number row ${idx + 1}`}
+                        />
+                      )}
+                    </td>
+                  )}
+
+                  {showBonusDeductions && (
+                    <td style={{ textAlign: 'right' }}>
+                      {readOnly ? (
+                        <span>{row.bonus ? formatINR(row.bonus) : '—'}</span>
+                      ) : (
+                        <input
+                          className="table-input input-number"
+                          type="number" min="0"
+                          value={row.bonus}
+                          onChange={e => updateCell(row.id, 'bonus', e.target.value)}
+                          placeholder="0"
+                          aria-label={`Bonus row ${idx + 1}`}
+                        />
+                      )}
+                    </td>
+                  )}
+
+                  {showBonusDeductions && (
+                    <td style={{ textAlign: 'right' }}>
+                      {readOnly ? (
+                        <span>{row.deductions ? formatINR(row.deductions) : '—'}</span>
+                      ) : (
+                        <input
+                          className="table-input input-number"
+                          type="number" min="0"
+                          value={row.deductions}
+                          onChange={e => updateCell(row.id, 'deductions', e.target.value)}
+                          placeholder="0"
+                          aria-label={`Deductions row ${idx + 1}`}
+                        />
+                      )}
+                    </td>
+                  )}
 
                   <td>
                     <span className={`net-salary-cell${net === 0 ? ' zero' : ''}`}>
@@ -172,8 +228,10 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
                   {summary.employees} {summary.employees === 1 ? 'employee' : 'employees'}
                 </td>
                 <td style={{ textAlign: 'right', fontWeight: 700 }}>{formatINR(summary.totalBase)}</td>
-                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--success)' }}>{formatINR(summary.totalBonus)}</td>
-                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--danger)' }}>{formatINR(summary.totalDeductions)}</td>
+                {isBankTab && <td></td>}
+                {isBankTab && <td></td>}
+                {showBonusDeductions && <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--success)' }}>{formatINR(summary.totalBonus)}</td>}
+                {showBonusDeductions && <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--danger)' }}>{formatINR(summary.totalDeductions)}</td>}
                 <td style={{ textAlign: 'right' }}>
                   <span className="net-salary-cell" style={{ fontSize: 15 }}>
                     {formatINR(summary.totalNet)}
@@ -183,7 +241,7 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
               </tr>
               {/* Amount in words row */}
               <tr className="words-row">
-                <td colSpan={readOnly ? 8 : 9}>
+                <td colSpan={totalCols}>
                   <span className="words-label">Net Salary in Words:</span>
                   <span className="words-value">{amountInWords(summary.totalNet)}</span>
                 </td>
@@ -194,7 +252,7 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
       </table>
 
       {!readOnly && (
-        <div className="table-footer-actions">
+        <div className="table-footer-actions" style={{ display: 'flex', gap: '10px' }}>
           <button
             className="btn btn-ghost btn-sm"
             onClick={onAddRow}
@@ -204,6 +262,17 @@ export function SalaryTable({ rows, onChange, onAddRow, onRemoveRow, readOnly, c
             <span style={{ fontSize: 16, lineHeight: 1 }}>＋</span>
             Add {cat.label} Employee
           </button>
+
+          {isBankTab && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => setShowExtras(!showExtras)}
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>{showExtras ? '−' : '＋'}</span>
+              {showExtras ? ' Hide Bonus & Deductions' : ' Add Bonus & Deductions'}
+            </button>
+          )}
         </div>
       )}
     </div>
