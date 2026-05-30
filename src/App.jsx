@@ -3,7 +3,7 @@ import {
   currentYearMonth, monthLabel, generateMonthOptions,
   newRow, computeSummary, SALARY_CATEGORIES,
 } from './utils';
-import { getSavedMonths, fetchMonthData, saveMonthData, deleteMonthData } from './api';
+import { login, getSavedMonths, fetchMonthData, saveMonthData, deleteMonthData } from './api';
 import { Sidebar }        from './Sidebar';
 import { MetricCards }    from './MetricCards';
 import { SalaryTable }    from './SalaryTable';
@@ -56,8 +56,69 @@ function ConfirmDialog({ title, desc, onConfirm, onCancel }) {
   );
 }
 
-// ── App ───────────────────────────────────────────────────────────────────────
-export default function App() {
+// ── Login Screen ──────────────────────────────────────────────────────────────
+function LoginScreen({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await login(username, password);
+      onLogin(res.username);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ width: 400, background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ color: 'var(--primary)', marginBottom: 16 }}><Icons.Wallet /></div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-main)', marginBottom: 8 }}>SalaryPro Login</h2>
+          <p style={{ color: 'var(--text-muted)' }}>Sign in to your workspace</p>
+        </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Username</label>
+            <input 
+              className="table-input input-wide" 
+              value={username} 
+              onChange={e => setUsername(e.target.value)} 
+              required 
+              style={{ padding: '10px' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Password</label>
+            <input 
+              type="password" 
+              className="table-input input-wide" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              required 
+              style={{ padding: '10px' }}
+            />
+          </div>
+          {error && <div style={{ color: 'var(--danger)', fontSize: 13, background: '#fef2f2', padding: '8px', borderRadius: 6 }}>{error}</div>}
+          <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: '12px', marginTop: 8 }}>
+            {loading ? 'Logging in...' : 'Log In'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Main App Component ────────────────────────────────────────────────────────
+function MainApp({ user, onLogout }) {
   const { year: initYear, month: initMonth } = currentYearMonth();
 
   const [activeYear,  setActiveYear]  = useState(initYear);
@@ -81,11 +142,12 @@ export default function App() {
       setActiveYear(year);
       setActiveMonth(month);
     } catch (error) {
-      addToast(`Error loading data: ${error.message}`, 'error');
+      if (error.message === 'Unauthorized') onLogout();
+      else addToast(`Error loading data: ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, onLogout]);
 
   // ── On mount ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -95,7 +157,11 @@ export default function App() {
         setSavedMonths(saved);
         await loadMonth(initYear, initMonth, saved);
       } catch (error) {
-        addToast(`Error connecting to server: ${error.message}`, 'error');
+        if (error.message === 'Unauthorized') {
+          onLogout();
+        } else {
+          addToast(`Error connecting to server: ${error.message}`, 'error');
+        }
         setIsLoading(false);
       }
     }
@@ -135,7 +201,8 @@ export default function App() {
       setSavedMonths(fresh);
       addToast(`Saved! ${monthLabel(activeYear, activeMonth)} data stored.`, 'success');
     } catch (error) {
-      addToast(`Error saving data: ${error.message}`, 'error');
+      if (error.message === 'Unauthorized') onLogout();
+      else addToast(`Error saving data: ${error.message}`, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -151,7 +218,8 @@ export default function App() {
       setShowConfirm(false);
       addToast(`${monthLabel(activeYear, activeMonth)} data cleared.`, 'info');
     } catch (error) {
-      addToast(`Error clearing data: ${error.message}`, 'error');
+      if (error.message === 'Unauthorized') onLogout();
+      else addToast(`Error clearing data: ${error.message}`, 'error');
     }
   }
 
@@ -167,7 +235,8 @@ export default function App() {
         setData(initial);
       }
     } catch (error) {
-      addToast(`Error deleting data: ${error.message}`, 'error');
+      if (error.message === 'Unauthorized') onLogout();
+      else addToast(`Error deleting data: ${error.message}`, 'error');
     }
   }
 
@@ -207,7 +276,14 @@ export default function App() {
             <div className="app-header-subtitle">Employee Salary Management System</div>
           </div>
         </div>
-        <div className="header-actions">
+        <div className="header-actions" style={{ alignItems: 'center' }}>
+          <div style={{ fontSize: 13, fontWeight: 500, marginRight: 8, color: 'var(--text-muted)' }}>
+            Welcome, <strong style={{ color: 'var(--text-main)' }}>{user}</strong>
+          </div>
+          <button className="btn btn-ghost btn-sm" onClick={onLogout} title="Logout" style={{ marginRight: 12 }}>
+            Logout
+          </button>
+          <div style={{ width: 1, height: 24, background: 'var(--border)', marginRight: 12 }}></div>
           <button id="export-btn" className="btn btn-accent" onClick={handleExport} title="Export to Excel" disabled={isLoading}>
             <Icons.Download /> Export Excel
           </button>
@@ -349,4 +425,21 @@ export default function App() {
       <ToastContainer toasts={toasts} />
     </div>
   );
+}
+
+// ── App Wrapper (Auth layer) ──────────────────────────────────────────────────
+export default function AppWrapper() {
+  const [user, setUser] = useState(() => localStorage.getItem('salary_user'));
+
+  if (!user) {
+    return <LoginScreen onLogin={u => {
+      localStorage.setItem('salary_user', u);
+      setUser(u);
+    }} />;
+  }
+
+  return <MainApp user={user} onLogout={() => {
+    localStorage.removeItem('salary_user');
+    setUser(null);
+  }} />;
 }
