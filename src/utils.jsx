@@ -206,7 +206,7 @@ function _toHundreds(n) {
  */
 export function amountInWords(amount) {
   const num = Math.round(Math.abs(amount));
-  if (num === 0) return 'Rupees Zero Only';
+  if (num === 0) return 'Zero Only';
 
   const crore   = Math.floor(num / 10_000_000);
   const lakh    = Math.floor((num % 10_000_000) / 100_000);
@@ -219,6 +219,6 @@ export function amountInWords(amount) {
   if (thousand) parts.push(_toHundreds(thousand) + ' Thousand');
   if (rest)     parts.push(_toHundreds(rest));
 
-  return 'Rupees ' + parts.join(' ') + ' Only';
+  return parts.join(' ') + ' Only';
 }
 
