@@ -89,21 +89,9 @@ function LoginScreen({ onLogin }) {
         border: '1px solid rgba(255,255,255,0.6)'
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            width: 64, 
-            height: 64, 
-            borderRadius: '16px', 
-            background: 'linear-gradient(135deg, var(--primary) 0%, #0ea5e9 100%)', 
-            color: 'white', 
-            marginBottom: 20,
-            boxShadow: '0 8px 16px rgba(14, 165, 233, 0.25)'
-          }}>
-            <Icons.Wallet />
+          <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
+            <img src="/logo.png" alt="Salary Manager Logo" style={{ height: 100, objectFit: 'contain' }} />
           </div>
-          <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-main)', marginBottom: 8, letterSpacing: '-0.5px' }}>SalaryPro</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>Welcome back! Please sign in.</p>
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -306,11 +294,9 @@ function MainApp({ user, onLogout }) {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <header className="app-header" role="banner">
         <div className="app-header-brand">
-          <div className="app-header-logo" aria-hidden="true" style={{ color: 'white' }}>
-            <Icons.Wallet />
-          </div>
+          <img src="/logo.png" alt="Salary Manager" style={{ height: 48, objectFit: 'contain' }} />
           <div>
-            <div className="app-header-title">SalaryPro</div>
+            <div className="app-header-title" style={{ display: 'none' }}>Salary Manager</div>
             <div className="app-header-subtitle">Employee Salary Management System</div>
           </div>
         </div>
